@@ -48,6 +48,7 @@
 
 #include "usb_buffer.h"
 #include "usb_endpoint.h"
+#include "standalone_hackrf/standalone_hackrf.h"
 
 #define USB_TRANSFER_SIZE 0x4000
 #define DMA_TRANSFER_SIZE 0x2000
@@ -651,6 +652,11 @@ void rx_mode(uint32_t seq)
 
 void tx_mode(uint32_t seq)
 {
+#if STANDALONE_HACKRF_ENABLE
+	standalone_hackrf_tx_mode(seq);
+	return;
+#endif
+
 	transceiver_startup(TRANSCEIVER_MODE_TX);
 
 	// First, make transfers directly into the sample buffer to fill it.

@@ -25,6 +25,26 @@ project(hackrf_usb C)
 
 include(../hackrf-common.cmake)
 
+# hackrf-standalone: optional compile-time overrides for the power-on TX loop.
+# Example:
+#   cmake .. \
+#     -DSTANDALONE_HACKRF_FREQ_HZ=915000000ULL \
+#     -DSTANDALONE_HACKRF_TXVGA_GAIN_DB=8 \
+#     -DSTANDALONE_HACKRF_RF_AMP_ENABLE=0
+foreach(var
+	STANDALONE_HACKRF_ENABLE
+	STANDALONE_HACKRF_FREQ_HZ
+	STANDALONE_HACKRF_SAMPLE_RATE_HZ
+	STANDALONE_HACKRF_BASEBAND_FILTER_BW_HZ
+	STANDALONE_HACKRF_TXVGA_GAIN_DB
+	STANDALONE_HACKRF_RF_AMP_ENABLE
+	STANDALONE_HACKRF_REFILL_CHUNK_BYTES
+)
+	if(DEFINED ${var} AND NOT "${${var}}" STREQUAL "")
+		add_definitions("-D${var}=${${var}}")
+	endif()
+endforeach()
+
 add_custom_command(
 	OUTPUT ${PATH_HACKRF_CPLD_DATA_C}
 	COMMAND ${PATH_CPLD_BITSTREAM_TOOL} --xsvf ${PATH_HACKRF_CPLD_XSVF} --hackrf-data ${PATH_HACKRF_CPLD_DATA_C}
@@ -59,6 +79,7 @@ set(SRC_M4
 	usb_api_register.c
 	usb_api_spiflash.c
 	usb_api_transceiver.c
+	standalone_hackrf/standalone_hackrf.c
 	usb_api_operacake.c
 	usb_api_sweep.c
 	usb_api_selftest.c

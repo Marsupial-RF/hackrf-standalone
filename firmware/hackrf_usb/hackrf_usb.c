@@ -85,6 +85,7 @@
 #include "usb_descriptor.h"
 #include "usb_device.h"
 #include "usb_endpoint.h"
+#include "standalone_hackrf/standalone_hackrf.h"
 #ifdef IS_PRALINE
 	#include "usb_api_praline.h"
 #endif
@@ -218,8 +219,14 @@ const usb_request_handlers_t usb_request_handlers = {
 
 void usb_configuration_changed(usb_device_t* const device)
 {
+#if STANDALONE_HACKRF_ENABLE
+	/* Keep standalone TX alive even if a USB host enumerates the device. */
+	standalone_hackrf_configure_radio();
+	request_transceiver_mode(TRANSCEIVER_MODE_TX);
+#else
 	/* Reset transceiver to idle state until other commands are received */
 	request_transceiver_mode(TRANSCEIVER_MODE_OFF);
+#endif
 	if (device->configuration->number == 1) {
 		// transceiver configuration
 		led_on(LED1);
@@ -612,6 +619,11 @@ int main(void)
 		clkin_detect_init();
 		clkin_detect_init();
 	}
+
+#if STANDALONE_HACKRF_ENABLE
+	standalone_hackrf_configure_radio();
+	request_transceiver_mode(TRANSCEIVER_MODE_TX);
+#endif
 
 	while (true) {
 		transceiver_request_t request;
